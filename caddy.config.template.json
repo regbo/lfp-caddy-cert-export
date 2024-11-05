@@ -1,0 +1,67 @@
+{
+  "admin": {
+    "disabled": ${CADDY_ADMIN_DISABLED:-true}
+  },
+  "logging": {
+    "logs": {
+      "default": {
+        "level": "${CADDY_LOG_LEVEL:-INFO}"
+      }
+    }
+  },
+  "apps": {
+    "events": {
+      "subscriptions": [
+        {
+          "events": [
+            "cert_obtained"
+          ],
+          "handlers": [
+            {
+              "handler": "exec",
+              "command": "/bin/bash",
+              "args": [
+                "-c",
+                "echo \"running /cert_obtained.sh\" && /bin/bash /cert_obtained.sh \"$$XDG_DATA_HOME/caddy/certificates/acme.zerossl.com-v2-dv90/${SUB_DOMAIN}.${DOMAIN}/${SUB_DOMAIN}.${DOMAIN}.crt\" \"$$XDG_DATA_HOME/caddy/certificates/acme.zerossl.com-v2-dv90/${SUB_DOMAIN}.${DOMAIN}/${SUB_DOMAIN}.${DOMAIN}.key\""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tls": {
+      "certificates": {
+        "automate": [
+          "${SUB_DOMAIN}.${DOMAIN}"
+        ]
+      },
+      "automation": {
+        "policies": [
+          {
+            "subjects": ["${SUB_DOMAIN}.${DOMAIN}"],
+            "issuers": [
+              {
+                "module": "acme",
+                "email": "${EMAIL_ADDRESS}",
+                "ca": "https://acme.zerossl.com/v2/DV90",
+                "external_account": {
+                  "key_id": "${ZEROSSL_KEY_ID}",
+                  "mac_key": "${ZEROSSL_MAC_KEY}"
+                },
+                "challenges": {
+                  "dns": {
+                    "provider": {
+                      "name": "cloudflare",
+                      "api_token": "${CLOUDFLARE_API_TOKEN}"
+                    }
+                  }
+                }
+              }
+            ],
+            "key_type": "rsa4096"
+          }
+        ]
+      }
+    }
+  }
+}
